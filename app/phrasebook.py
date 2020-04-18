@@ -150,7 +150,8 @@ def default_generators():
         "AGGREGATION": choice('average', 'mean', 'median', 'sum',
                               "max", "maximum", "greatest", "largest",
                               "min", "minimum", "least", "smallest"),
-        "DATE_GROUP": choice('daily', 'weekly', 'monthly', 'annual', 'quarterly', 'yearly'),
+        "PERIOD": choice('day', 'week', 'month', 'quarter', 'year'),
+        "PERIODLY": choice('daily', 'weekly', 'monthly', 'annual', 'quarterly', 'yearly'),
         "DATE": DateGen()
     }
 
@@ -248,28 +249,38 @@ def train_model(phrasebook: List[MarkupStr], validation_ratio) -> Language:
 
 class PhrasebookApp:
     def __init__(self):
-        self._df: Optional[pd.DataFrame] = None
+        # self._df: Optional[pd.DataFrame] = None
         self._vocabs: Dict[str, Set[str]] = {}
         self._statements: Dict[str, G] = {}
         self._nlp: Optional[Language] = None
 
-    def _require_df(self):
-        if self._df is None:
-            raise Exception("there's no data loaded in. use 'load csv' to load a csv in")
+    # def _require_df(self):
+    #     if self._df is None:
+    #         raise Exception("there's no data loaded in. use 'load csv' to load a csv in")
 
     def _require_nlp(self):
         if self._nlp is None:
             raise Exception("there's no recognizer trained, use 'train' after adding some statements")
 
     def load_csv(self, filename):
-        self._df = pd.read_csv(filename)
+        return pd.read_csv(filename)
 
-    def list_columns(self):
-        self._require_df()
-        return list(sorted(self._df.columns))
+    def list_columns(self, df: pd.DataFrame):
+        # self._require_df()
+        return list(sorted(df.columns))
 
-    def add_vocab(self, column, label: str):
+    def add_vocab(self, label, *words):
+        _words = self._vocabs.get(label, set())
+        _words.update(words)
+        self._vocabs[label] = _words
+
+    def remove_vocab(self, label):
+        del self._vocabs[label]
+
+    def extract_vocab(self, column, label: str, reference=None):
         self._require_df()
+        if reference is None:
+            reference = label
         existing = self._vocabs.get(label, set())
         existing.update(clean_column(self._df[column]))
         self._vocabs[label] = set(existing)

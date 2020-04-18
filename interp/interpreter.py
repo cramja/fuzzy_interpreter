@@ -81,7 +81,7 @@ class InterpretableWrapper(Interpretable):
         elif method in InterpretableWrapper.__builtin:
             _method = getattr(self, method)
 
-        if not _method or not callable(_method):
+        if _method is None or not callable(_method):
             raise InterpException(f"no callable function '{method}' was found", 20)
 
         sig = signature(_method)
@@ -174,19 +174,13 @@ class Interpreter:
 
         # TODO: handle more interesting return scenarios. Could imagine wrapping the returned object and re-executing
         # For now, simply print strings and assign interpretables
-        if isinstance(r, Interpretable):
-            if method.assignment:
+        if method.assignment is not None:
+            if isinstance(r, (str, list, dict, set)) or isinstance(r, Interpretable):
                 self._vars[method.assignment] = r
             else:
-                self._vars['previousTarget'] = self._target
-                self._target = r
-        elif isinstance(r, str):
-            print(r)
-        elif isinstance(r, list):
-            for i in r:
-                print(i)
-        elif r is not None:
-            print(f"method returned: {r}")
+                self._vars[method.assignment] = InterpretableWrapper(r)
+        else:
+            self.show(r)
 
     def __call__(self, statement):
         try:
@@ -199,7 +193,6 @@ class Interpreter:
 
             bindings = list(sorted(map(bind, self._parser.parse(statement)), key=lambda x: x[1]))
             if not bindings:
-                print("sorry, but there was no viable action for your request")
                 return None
             binding = bindings[0]
 
@@ -244,6 +237,17 @@ class Interpreter:
 
     def list(self):
         return list(self._apps.keys())
+
+    def show(self, var_or_ref):
+        if isinstance(var_or_ref, str) and var_or_ref in self._vars:
+            var = self._vars[var_or_ref]
+        else:
+            var = var_or_ref
+        if isinstance(var, list) or isinstance(var, set):
+            for v in var:
+                print(v)
+        elif var is not None:
+            print(var)
 
     def use(self, varname):
         if varname in self._vars:

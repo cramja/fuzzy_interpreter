@@ -10,6 +10,7 @@ from lark import Tree
 
 GRAMMAR = r"""
     start: target? method "with"? args? assignment?
+        | COMMENT -> comment
 
     target: "using" id ","
 
@@ -81,7 +82,7 @@ def visit_start(node: Tree) -> Generator[Expression, None, None]:
         for child in node.children:
             for exp in visit_start(child):
                 yield exp
-    else:
+    elif node.data != "comment":
         # pattern = target? (method args?)+ assignment
 
         target = visit_target(node.children[0])
@@ -176,7 +177,8 @@ def visit_literal(node: Tree) -> Generator[LitReturn, None, None]:
             yield from visit_literal(child)
     else:
         if node.data == 'number':
-            yield float(node.children[0].value)
+            data = node.children[0].value
+            yield float(data) if "." in data else int(data)
         elif node.data == 'naked_string':
             yield node.children[0].value
         elif node.data == 'string':
