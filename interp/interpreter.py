@@ -5,8 +5,10 @@ from inspect import signature
 from typing import Callable
 from typing import Optional
 from typing import Tuple
+import textwrap
 
 from lark import LarkError
+from tabulate import tabulate
 
 from interp.parser import Expression
 from interp.parser import Id
@@ -46,6 +48,9 @@ class InterpretableWrapper(Interpretable):
         self._obj = obj
 
     def options(self):
+        # TODO: should be able to explain a single method, maybe also have a verbose mode which prints out the
+        # method doc string
+
         def inspect_fn(fn):
             sig = signature(fn)
             # TODO add default params
@@ -58,21 +63,17 @@ class InterpretableWrapper(Interpretable):
             return methods
 
         target = self._obj
-        lines = [f"type:\n  {type(target)}\nfunctions:\n"]
+        lines = [f"type: {type(target)}", "functions:"]
+        indent = '  '
+        indent_level = 1
         for method, args in inspect_obj(target).items():
             method = method.replace("_", " ")
-            if args:
-                lines.append(f"  {method} (")
-                for idx, arg in enumerate(args):
-                    if idx == len(args) - 1:
-                        sep = ")\n"
-                    else:
-                        sep = ", "
-                    lines.append(f"{arg}{sep}")
-            else:
-                lines.append(f"  {method}\n")
-
-        return "".join(lines)
+            lines.append(f"{indent * indent_level}{method}")
+            indent_level += 1
+            for idx, arg in enumerate(args):
+                lines.append(f"{indent * indent_level}{arg}")
+            indent_level -= 1
+        return lines
 
     def bind(self, method: str, args: list, kwargs: dict, assignment) -> BoundExpression:
         _method = None
@@ -240,14 +241,29 @@ class Interpreter:
 
     def show(self, var_or_ref):
         if isinstance(var_or_ref, str) and var_or_ref in self._vars:
+            # TODO: this is very hacky, requires a disambiguation flow
             var = self._vars[var_or_ref]
         else:
             var = var_or_ref
-        if isinstance(var, list) or isinstance(var, set):
+
+        def print_wrap(s):
+            if isinstance(s, str):
+                for line in textwrap.wrap(s):
+                    print(line)
+            else:
+                print(s)
+
+        if isinstance(var, list) and len(var) > 0 and isinstance(var[0], list):
+            print(tabulate(var[1:], headers=var[0]))
+        elif isinstance(var, list) or isinstance(var, set):
             for v in var:
                 print(v)
+        elif isinstance(var, str):
+            print_wrap(var)
         elif var is not None:
-            print(var)
+            print_wrap(var)
+        else:
+            print("<none>")
 
     def use(self, varname):
         if varname in self._vars:

@@ -5,9 +5,11 @@ from prompt_toolkit import PromptSession
 from interp.interpreter import Interpreter
 from interp.interpreter import InterpretableWrapper
 import app.phrasebook
+import app.nlp
 
 interpreter = Interpreter({
-    "phrasebook": lambda _: InterpretableWrapper(app.phrasebook.PhrasebookApp())
+    "phrasebook": lambda _: InterpretableWrapper(app.phrasebook.PhrasebookApp()),
+    "nlp": lambda _: InterpretableWrapper(app.nlp.NLP())
 })
 prompt = PromptSession()
 
