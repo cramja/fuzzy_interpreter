@@ -9,26 +9,38 @@ class TreeIndenter(Indenter):
     DEDENT_type = '_DEDENT'
     tab_len = 4
 
+GRAMMAR_=r"""
+start: _NL _INDENT body* _DEDENT?
+body: WORD ":" section_body
+   | text_block+
+   | _NL
+
+section_body: _NL [ _INDENT text_block _DEDENT ]
+text_block: (WORD+ _NL)+
+WORD: /[A-Za-z0-9.,;'"`!@$%^&*()]+/
+
+%import common.WS_INLINE
+%declare _INDENT _DEDENT
+%ignore WS_INLINE
+_NL: /(\r?\n[\t ]*)+/
+"""
 
 GRAMMAR = r"""
-start: line* section+ line*
-    | line*
+start: (_NL | body)*
 
-section: head _INDENT section_body _DEDENT
+body: _INDENT statement* _DEDENT
 
-section_body: line* 
-    | line* name_comment+ line*
+statement: section | line
 
-name_comment: name ":" comment
+section: section_head _NL _INDENT section_body+ _DEDENT 
+section_head: /[A-Z][a-z]+/ ":"
+section_body: line
+    | arg
 
-name: WORD+
-
-comment: line [ _INDENT line+ _DEDENT ]
+arg: WORD+ ":" arg_desc
+arg_desc: WORD* _NL [ _INDENT line* _DEDENT ]
 
 line: WORD* _NL
-
-head: /[A-Z][a-z]+/ ":" _NL
-
 WORD: /[A-Za-z0-9.,;'"`!@$%^&*()]+/
 
 %import common.WS_INLINE
