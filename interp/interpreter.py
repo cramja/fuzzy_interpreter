@@ -1,7 +1,8 @@
 import random
 from abc import ABC
 from abc import abstractmethod
-from inspect import signature
+from collections import namedtuple
+from inspect import signature, Parameter
 from typing import Callable
 from typing import Optional
 from typing import Tuple
@@ -10,6 +11,8 @@ import textwrap
 from lark import LarkError
 from tabulate import tabulate
 
+from interp.docstr import DocStr
+from interp.docstr import parse_doc_string
 from interp.parser import Expression
 from interp.parser import Id
 from interp.parser import Parser
@@ -51,27 +54,47 @@ class InterpretableWrapper(Interpretable):
         # TODO: should be able to explain a single method, maybe also have a verbose mode which prints out the
         # method doc string
 
-        def inspect_fn(fn):
-            sig = signature(fn)
-            # TODO add default params
-            return [k for k in sig.parameters.keys()]
+        Param = namedtuple("Param", ["name", "doc", "default"])
+        Method = namedtuple("Method", ['name', 'doc', 'params'])
 
-        def inspect_obj(obj):
-            methods = {}
-            for field in filter(lambda field: not field.startswith("_") and callable(getattr(obj, field)), dir(obj)):
-                methods[field] = inspect_fn(getattr(obj, field))
-            return methods
+        def wrap_and_indent(line, indent, max_width=60):
+            width = max_width - indent
+            ind = ' ' * indent
+            return [ind + line for line in textwrap.wrap(line, width)]
+
+        def get_method(name, fn) -> Method:
+            ds: DocStr = parse_doc_string(fn.__doc__)
+            sig = signature(fn)
+            params = []
+            for pname, pval in sig.parameters.items():
+                if pname == "self": continue
+                doc = ""
+                if ds and pname in ds.args:
+                    doc = ds.args[pname]
+                params.append(Param(pname, doc, None if pval.default == Parameter.empty else pval.default))
+            return Method(name.replace("_", " "), ds.head if ds else "", params)
+
+        def get_methods(obj):
+            return map(lambda x: get_method(*x), map(lambda name: (name, getattr(obj, name),), filter(lambda field: field and not field.startswith("_") and callable(getattr(obj, field)), dir(obj))))
 
         target = self._obj
         lines = [f"type: {type(target)}", "functions:"]
-        indent = '  '
         indent_level = 1
-        for method, args in inspect_obj(target).items():
-            method = method.replace("_", " ")
-            lines.append(f"{indent * indent_level}{method}")
+        indent_width = 2
+
+        def indent(lvl): return ' ' * indent_width * lvl
+
+        for method in get_methods(target):
+            lines.append(f"{indent(indent_level)}{method.name}:")
             indent_level += 1
-            for idx, arg in enumerate(args):
-                lines.append(f"{indent * indent_level}{arg}")
+            if method.doc:
+                lines.extend(wrap_and_indent(method.doc, indent_width * indent_level))
+            for param in method.params:
+                lines.append(f"{indent(indent_level)}:{param.name}")
+                doc = param.doc
+                if param.default:
+                    doc = f"The default is {param.default}. " + doc
+                lines.extend(wrap_and_indent(doc, indent_width * indent_level + 1))
             indent_level -= 1
         return lines
 

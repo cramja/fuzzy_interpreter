@@ -68,6 +68,11 @@ class NLP:
         return self.details.get(name.upper(), 'sorry, that doesn\'t exist in the database')
 
     def tokens(self, phrase: str) -> List[List[str]]:
+        """!
+        Uses a spacy model to extract important tokens in a given phrase.
+        phrase: a string to be tokenized
+        returns: a table containing the decomposition
+        """
         doc: Doc = self.nlp(phrase)
         table = [["text", "POS", "POS desc", "tag", "tag desc", "dep", "dep desc"]]
         def lookup(x):

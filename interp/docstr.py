@@ -64,7 +64,10 @@ def parse_doc_string(line) -> Optional[DocStr]:
         of strings but realized (after an embarrassing number of hours) that the grammar
         is not lalr parsable so this simple scheme prevails.
 
+    returns: A DocStr if the string started with a !, otherwise, None.
     """
+    if not line or not line.startswith("!"):
+        return None
     lr = LineReader(line)
     head = []
     args = {}
