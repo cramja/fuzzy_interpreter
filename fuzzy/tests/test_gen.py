@@ -1,6 +1,6 @@
-from app.phrasebook import parser
-from app.phrasebook import MarkupStr
-from app.phrasebook import choice
+from fuzzy.app.phrasebook import parser
+from fuzzy.app.phrasebook import MarkupStr
+from fuzzy.app.phrasebook import choice
 
 
 def test_generate_with_function():

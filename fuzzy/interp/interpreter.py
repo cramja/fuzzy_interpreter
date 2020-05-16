@@ -11,11 +11,11 @@ import textwrap
 from lark import LarkError
 from tabulate import tabulate
 
-from interp.docstr import DocStr
-from interp.docstr import parse_doc_string
-from interp.parser import Expression
-from interp.parser import Id
-from interp.parser import Parser
+from fuzzy.interp.docstr import DocStr
+from fuzzy.interp.docstr import parse_doc_string
+from fuzzy.interp.parser import Expression
+from fuzzy.interp.parser import Id
+from fuzzy.interp.parser import Parser
 
 
 class InterpException(Exception):

@@ -1,4 +1,4 @@
-from interp.interpreter import InterpretableWrapper
+from fuzzy.interp.interpreter import InterpretableWrapper
 
 
 class Command:

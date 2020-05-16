@@ -1,12 +1,12 @@
 from lark import Lark
 
-from interp.parser import GRAMMAR
-from interp.parser import Id
-from interp.parser import visit_args
-from interp.parser import visit_literal
-from interp.parser import visit_literal_list
-from interp.parser import visit_literal_map
-from interp.parser import visit_start
+from fuzzy.interp.parser import GRAMMAR
+from fuzzy.interp.parser import Id
+from fuzzy.interp.parser import visit_args
+from fuzzy.interp.parser import visit_literal
+from fuzzy.interp.parser import visit_literal_list
+from fuzzy.interp.parser import visit_literal_map
+from fuzzy.interp.parser import visit_start
 
 
 def test_literal_number():

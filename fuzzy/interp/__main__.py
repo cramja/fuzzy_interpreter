@@ -2,14 +2,14 @@ import sys
 
 from prompt_toolkit import PromptSession
 
-from interp.interpreter import Interpreter
-from interp.interpreter import InterpretableWrapper
-import app.phrasebook
-import app.nlp
+from fuzzy.interp.interpreter import Interpreter
+from fuzzy.interp.interpreter import InterpretableWrapper
+import fuzzy.app.phrasebook
+import fuzzy.app.nlp
 
 interpreter = Interpreter({
-    "phrasebook": lambda _: InterpretableWrapper(app.phrasebook.PhrasebookApp()),
-    "nlp": lambda _: InterpretableWrapper(app.nlp.NLP())
+    "phrasebook": lambda _: InterpretableWrapper(fuzzy.app.phrasebook.PhrasebookApp()),
+    "nlp": lambda _: InterpretableWrapper(fuzzy.app.nlp.NLP())
 })
 prompt = PromptSession()
 

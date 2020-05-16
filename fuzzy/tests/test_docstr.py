@@ -1,4 +1,4 @@
-from interp.docstr import parse_doc_string
+from fuzzy.interp.docstr import parse_doc_string
 
 
 def test_doc_str():
