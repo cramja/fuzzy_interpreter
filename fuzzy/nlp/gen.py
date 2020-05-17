@@ -35,6 +35,9 @@ class MarkupStr:
             labels.append((offset + label[0], offset + label[1], label[2]))
         return MarkupStr(new_text, labels)
 
+    def __str__(self) -> str:
+        return f"'{self.text}' @{self.labels}"
+
 
 class G(ABC):  # Generator
     def __init__(self, val=None):
@@ -74,9 +77,25 @@ class Ref(G):
 
 
 class Choice(G):
+    def __init__(self, *args):
+        super().__init__()
+        if len(args) == 1 and isinstance(args[0], list):
+            self._val = args[0]
+        else:
+            self._val = list(args)
+
     # val = List[G]
     def _generate(self):
         return random.choice(self._val).generate()
+
+
+class Opt(G):
+
+    # val = any G
+    def _generate(self) -> Union[MarkupStr, str, None]:
+        if random.random() < 0.5:
+            return self._val.generate()
+        return None
 
 
 class Seq(G):
@@ -104,7 +123,13 @@ class _GeneratorTransformer(Transformer):
     def choice(self, words):
         return Choice(words)
 
-    def word(self, word):
+    def opt_word(self, base_word):
+        return Opt(base_word[0])
+
+    def req_word(self, base_word):
+        return base_word[0]
+
+    def word_base(self, word):
         return word[0]
 
     def ref(self, val):
@@ -159,7 +184,10 @@ def parser(generators={}) -> Lark:
 
     sequence: word+
 
-    word: REF -> ref
+    word: word_base "?" -> opt_word
+      | word_base -> req_word
+      
+    word_base: REF -> ref
       | literal
       | choice
 
