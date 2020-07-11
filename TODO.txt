@@ -1,0 +1,1 @@
+- smarter parameter resolution- look at type hints to determine if what is referenced is a string or an object

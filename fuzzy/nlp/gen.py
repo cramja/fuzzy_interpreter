@@ -38,6 +38,14 @@ class MarkupStr:
     def __str__(self) -> str:
         return f"'{self.text}' @{self.labels}"
 
+    def __eq__(self, o: object) -> bool:
+        if isinstance(o, MarkupStr):
+            return o.text == self.text
+        return False
+
+    def __hash__(self) -> int:
+        return hash(self.text)
+
 
 class G(ABC):  # Generator
     def __init__(self, val=None):
@@ -81,8 +89,10 @@ class Choice(G):
         super().__init__()
         if len(args) == 1 and isinstance(args[0], list):
             self._val = args[0]
+        elif len(args) > 0 and isinstance(args[0], str):
+            self._val = list(map(lambda e: Lit(e), args))
         else:
-            self._val = list(args)
+            self._val = list(args)  # YOLO
 
     # val = List[G]
     def _generate(self):
